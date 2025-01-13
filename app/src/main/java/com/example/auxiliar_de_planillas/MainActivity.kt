@@ -1,6 +1,8 @@
 package com.example.auxiliar_de_planillas
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -12,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.auxiliar_de_planillas.ui.theme.Auxiliar_de_planillasTheme
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
 /*Documentación
 el objetivo es cargar la lista de estudiantes, luego mostrarlos por curso.
 crear lista de asistencia y escribirla en un csv general,
@@ -40,7 +45,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+//        Log.d("MiEtiqueta", "Hola Mundo 2 desde Logcat")
+        val listaEstudiantes = leerCsvComoEstudiantes(this, R.raw.data)
+
+        // Mostrar los estudiantes en el Logcat
+        listaEstudiantes.forEach { estudiante ->
+            Log.d("Estudiante", "Activo: ${estudiante.activo}, Documento: ${estudiante.id}, Grado: ${estudiante.grado}, Sede: ${estudiante.sede}, Apellidos y Nombres: ${estudiante.apellidosYNombres}")
+        }
     }
+
+
     private val estudiantes: MutableList<Estudiante> = mutableListOf()
     private fun readData(){
         /*val EjemploEstudiante1 = Estudiante(
@@ -51,6 +65,32 @@ class MainActivity : ComponentActivity() {
             nombre = "Mauricio Sastoque"
         )*/
     }
+}
+
+fun leerCsvComoEstudiantes(context: Context, resourceId: Int): List<Estudiante> {
+    val estudiantes = mutableListOf<Estudiante>()
+
+    context.resources.openRawResource(resourceId).use { inputStream ->
+        BufferedReader(InputStreamReader(inputStream, Charsets.ISO_8859_1)).use { reader ->
+            // Saltar la cabecera del CSV
+            reader.lineSequence().drop(1).forEach { linea ->
+                // Dividir la línea por comas
+                val valores = linea.split(",")
+
+                // Crear un objeto Estudiante usando los valores de cada línea
+                val estudiante = Estudiante(
+                    activo = valores[0].toBoolean(),
+                    id = valores[1],
+                    grado = valores[2].toInt(),
+                    sede = valores[3],
+                    apellidosYNombres = valores[4]
+                )
+                estudiantes.add(estudiante)
+            }
+        }
+    }
+
+    return estudiantes
 }
 
 @Composable
